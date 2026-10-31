@@ -1,0 +1,688 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Local development uses SQLite so the platform runs without a hosted database.
+// Production target is PostgreSQL (Neon). See README for the provider switch.
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String
+  phone           String?
+  isActive        Boolean   @default(true)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  roles           UserRole[]
+  farmer          Farmer?
+  buyer           Buyer?
+  vendor          Vendor?
+  auditLogs       AuditLog[]       @relation("AuditActor")
+  enquiryMessages EnquiryMessage[]
+  notifications   Notification[]
+  media           MediaAsset[]
+  stockMovements  StockMovement[]
+  tokens          AuthToken[]
+
+  @@index([isActive])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model Permission {
+  id          String @id @default(cuid())
+  key         String @unique
+  name        String
+  description String
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model AuthToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+}
+
+model CompanySettings {
+  id                String   @id @default("default")
+  legalName         String
+  tradeName         String
+  email             String
+  phone             String   @default("")
+  website           String
+  registeredAddress String
+  principalPlace    String
+  cin               String
+  gstin             String
+  incorporationDate String
+  directors         String
+  heroEyebrow       String
+  heroTitle         String
+  heroLede          String
+  introHeading      String
+  introBody         String
+  ctaHeading        String
+  ctaBody           String
+  seoTitle          String
+  seoDescription    String
+  mapsEmbedUrl      String   @default("")
+  publicNotice      String   @default("")
+  featuresJson      String
+  updatedAt         DateTime @updatedAt
+}
+
+model Page {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  metaTitle       String
+  metaDescription String
+  published       Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  sections        PageSection[]
+}
+
+model PageSection {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  key       String
+  heading   String
+  body      String
+  sortOrder Int
+  published Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([pageId, key])
+  @@index([pageId, sortOrder])
+}
+
+model BusinessVertical {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  title            String
+  summary          String
+  overview         String
+  capabilities     String
+  benefits         String
+  status           String
+  availabilityNote String
+  image            String
+  imageAlt         String
+  sortOrder        Int
+  published        Boolean   @default(true)
+  metaTitle        String
+  metaDescription  String
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([published, sortOrder])
+}
+
+model Service {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  summary         String
+  overview        String
+  scopeNote       String
+  availability    String
+  image           String
+  imageAlt        String
+  sortOrder       Int
+  published       Boolean   @default(true)
+  metaTitle       String
+  metaDescription String
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([published, sortOrder])
+}
+
+model ProductCategory {
+  id          String            @id @default(cuid())
+  slug        String            @unique
+  name        String
+  description String
+  sortOrder   Int
+  published   Boolean           @default(true)
+  parentId    String?
+  parent      ProductCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+
+  @@index([parentId, sortOrder])
+}
+
+model Product {
+  id                 String          @id @default(cuid())
+  slug               String          @unique
+  name               String
+  summary            String
+  description        String
+  categoryId         String
+  category           ProductCategory @relation(fields: [categoryId], references: [id])
+  originNote         String
+  qualityNote        String
+  packagingNote      String
+  availabilityStatus String
+  indicative         Boolean         @default(true)
+  published          Boolean         @default(false)
+  metaTitle          String
+  metaDescription    String
+  deletedAt          DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  images             ProductImage[]
+  enquiries          Enquiry[]
+
+  @@index([categoryId, published])
+  @@index([published, name])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String
+  sortOrder Int
+}
+
+model Farmer {
+  id           String          @id @default(cuid())
+  userId       String?         @unique
+  user         User?           @relation(fields: [userId], references: [id])
+  fullName     String
+  organisation String          @default("")
+  email        String
+  phone        String
+  state        String
+  district     String
+  crops        String
+  landNote     String          @default("")
+  message      String          @default("")
+  status       String          @default("PENDING")
+  reviewNote   String          @default("")
+  deletedAt    DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  produce      FarmerProduce[]
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model FarmerProduce {
+  id            String   @id @default(cuid())
+  farmerId      String
+  farmer        Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  crop          String
+  harvestWindow String   @default("")
+  location      String   @default("")
+  quantityNote  String   @default("")
+  status        String   @default("OPEN")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Buyer {
+  id           String               @id @default(cuid())
+  userId       String?              @unique
+  user         User?                @relation(fields: [userId], references: [id])
+  contactName  String
+  organisation String
+  buyerType    String
+  email        String
+  phone        String
+  state        String               @default("")
+  requirements String
+  status       String               @default("PENDING")
+  reviewNote   String               @default("")
+  deletedAt    DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  procurement  ProcurementRequest[]
+  orders       OrderEnquiry[]
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model Vendor {
+  id           String      @id @default(cuid())
+  userId       String?     @unique
+  user         User?       @relation(fields: [userId], references: [id])
+  businessName String
+  contactName  String
+  email        String
+  phone        String
+  gstin        String      @default("")
+  state        String      @default("")
+  supplyNote   String
+  status       String      @default("PENDING")
+  reviewNote   String      @default("")
+  deletedAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  quotations   Quotation[]
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model Enquiry {
+  id         String           @id @default(cuid())
+  reference  String           @unique
+  type       String
+  name       String
+  company    String           @default("")
+  email      String
+  phone      String
+  subject    String
+  message    String
+  status     String           @default("NEW")
+  productId  String?
+  product    Product?         @relation(fields: [productId], references: [id])
+  sourcePath String           @default("")
+  deletedAt  DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  messages   EnquiryMessage[]
+
+  @@index([status, createdAt])
+  @@index([type])
+  @@index([email])
+}
+
+model EnquiryMessage {
+  id        String   @id @default(cuid())
+  enquiryId String
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id])
+  body      String
+  internal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ProcurementRequest {
+  id           String      @id @default(cuid())
+  reference    String      @unique
+  buyerId      String?
+  buyer        Buyer?      @relation(fields: [buyerId], references: [id])
+  organisation String
+  contactName  String
+  email        String
+  phone        String
+  productName  String
+  quantityNote String
+  deliveryNote String      @default("")
+  details      String
+  status       String      @default("SUBMITTED")
+  deletedAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  quotations   Quotation[]
+
+  @@index([status, createdAt])
+}
+
+model Quotation {
+  id            String             @id @default(cuid())
+  procurementId String
+  procurement   ProcurementRequest @relation(fields: [procurementId], references: [id], onDelete: Cascade)
+  vendorId      String?
+  vendor        Vendor?            @relation(fields: [vendorId], references: [id])
+  narrative     String
+  terms         String             @default("")
+  status        String             @default("DRAFT")
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([procurementId])
+}
+
+model Farm {
+  id        String        @id @default(cuid())
+  name      String
+  code      String        @unique
+  location  String
+  district  String        @default("")
+  state     String        @default("")
+  areaNote  String        @default("")
+  status    String        @default("DRAFT")
+  notes     String        @default("")
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  plots     FarmPlot[]
+  expenses  FarmExpense[]
+
+  @@index([status])
+}
+
+model FarmPlot {
+  id        String       @id @default(cuid())
+  farmId    String
+  farm      Farm         @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name      String
+  areaNote  String       @default("")
+  soilNote  String       @default("")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  crops     CropRecord[]
+}
+
+model CropRecord {
+  id         String             @id @default(cuid())
+  plotId     String
+  plot       FarmPlot           @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  crop       String
+  season     String             @default("")
+  sowingDate String             @default("")
+  status     String             @default("PLANNED")
+  notes      String             @default("")
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  irrigation IrrigationRecord[]
+  inputs     InputRecord[]
+  harvests   HarvestRecord[]
+}
+
+model IrrigationRecord {
+  id        String     @id @default(cuid())
+  cropId    String
+  crop      CropRecord @relation(fields: [cropId], references: [id], onDelete: Cascade)
+  date      String
+  method    String
+  notes     String     @default("")
+  createdAt DateTime   @default(now())
+}
+
+model InputRecord {
+  id           String     @id @default(cuid())
+  cropId       String
+  crop         CropRecord @relation(fields: [cropId], references: [id], onDelete: Cascade)
+  date         String
+  inputType    String
+  quantityNote String     @default("")
+  notes        String     @default("")
+  createdAt    DateTime   @default(now())
+}
+
+model HarvestRecord {
+  id           String     @id @default(cuid())
+  cropId       String
+  crop         CropRecord @relation(fields: [cropId], references: [id], onDelete: Cascade)
+  date         String
+  quantityNote String
+  unit         String     @default("")
+  status       String     @default("RECORDED")
+  notes        String     @default("")
+  createdAt    DateTime   @default(now())
+}
+
+model FarmExpense {
+  id         String   @id @default(cuid())
+  farmId     String
+  farm       Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  date       String
+  category   String
+  amountNote String
+  notes      String   @default("")
+  createdAt  DateTime @default(now())
+}
+
+model Warehouse {
+  id        String           @id @default(cuid())
+  name      String
+  location  String
+  kind      String
+  status    String           @default("PLANNED")
+  notes     String           @default("")
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  batches   InventoryBatch[]
+}
+
+model InventoryItem {
+  id        String           @id @default(cuid())
+  sku       String           @unique
+  name      String
+  category  String           @default("")
+  unit      String
+  notes     String           @default("")
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  batches   InventoryBatch[]
+}
+
+model InventoryBatch {
+  id          String          @id @default(cuid())
+  itemId      String
+  item        InventoryItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  warehouseId String?
+  warehouse   Warehouse?      @relation(fields: [warehouseId], references: [id])
+  batchNumber String
+  sourceNote  String          @default("")
+  receivedOn  String
+  quantity    String
+  unit        String
+  status      String          @default("RECEIVED")
+  qualityNote String          @default("")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  movements   StockMovement[]
+
+  @@unique([itemId, batchNumber])
+  @@index([status])
+}
+
+model StockMovement {
+  id          String         @id @default(cuid())
+  batchId     String
+  batch       InventoryBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  type        String
+  quantity    String
+  note        String         @default("")
+  createdById String?
+  createdBy   User?          @relation(fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+}
+
+model OrderEnquiry {
+  id           String    @id @default(cuid())
+  reference    String    @unique
+  buyerId      String?
+  buyer        Buyer?    @relation(fields: [buyerId], references: [id])
+  organisation String
+  contactName  String
+  email        String
+  phone        String
+  status       String    @default("OPEN")
+  notes        String    @default("")
+  itemsSummary String
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  excerpt         String
+  body            String
+  coverImage      String    @default("")
+  coverAlt        String    @default("")
+  published       Boolean   @default(false)
+  publishedAt     DateTime?
+  metaTitle       String
+  metaDescription String
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([published, publishedAt])
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  sortOrder Int
+  published Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model LegalDocument {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  body            String
+  status          String   @default("DRAFT")
+  reviewNote      String
+  metaDescription String
+  updatedAt       DateTime @updatedAt
+}
+
+model MediaAsset {
+  id           String    @id @default(cuid())
+  filename     String
+  originalName String
+  mime         String
+  size         Int
+  path         String
+  alt          String    @default("")
+  isPublic     Boolean   @default(true)
+  uploadedById String?
+  uploadedBy   User?     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  channel   String
+  status    String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String   @default("")
+  summary   String
+  ip        String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([actorId])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  subject   String
+  body      String
+  updatedAt DateTime @updatedAt
+}
+
+model ComplianceRecord {
+  id          String    @id @default(cuid())
+  title       String
+  authority   String
+  referenceNo String    @default("")
+  issuedOn    String    @default("")
+  expiresOn   String    @default("")
+  status      String
+  notes       String    @default("")
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model IntegrationConfig {
+  key         String   @id
+  name        String
+  description String
+  enabled     Boolean  @default(false)
+  statusNote  String
+  updatedAt   DateTime @updatedAt
+}
+
+model Counter {
+  key   String @id
+  value Int    @default(0)
+}
