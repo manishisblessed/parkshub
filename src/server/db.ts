@@ -1,12 +1,18 @@
 import "server-only";
-import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+export const hasDatabase = !!process.env.DATABASE_URL;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-  });
+let _prisma: any = null;
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (hasDatabase) {
+  const { PrismaClient } = require("@prisma/client") as typeof import("@prisma/client");
+  const g = globalThis as unknown as { prisma?: InstanceType<typeof PrismaClient> };
+  _prisma =
+    g.prisma ??
+    new PrismaClient({
+      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    });
+  if (process.env.NODE_ENV !== "production") g.prisma = _prisma;
+}
+
+export const prisma = _prisma as import("@prisma/client").PrismaClient;

@@ -6,27 +6,21 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 import { Paragraphs } from "@/components/rich-text";
 import { Breadcrumbs, Container, ScopeNote } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
-import { prisma } from "@/server/db";
+import { getServiceBySlug, getRelatedServices } from "@/server/queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = await prisma.service.findFirst({ where: { slug, published: true, deletedAt: null } });
+  const service = await getServiceBySlug(slug);
   if (!service) return {};
   return pageMeta(service.metaTitle, service.metaDescription, `/services/${service.slug}`, service.image);
 }
 
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = await prisma.service.findFirst({
-    where: { slug, published: true, deletedAt: null },
-  });
+  const service = await getServiceBySlug(slug);
   if (!service) notFound();
 
-  const related = await prisma.service.findMany({
-    where: { published: true, deletedAt: null, NOT: { id: service.id } },
-    take: 4,
-    orderBy: { sortOrder: "asc" },
-  });
+  const related = await getRelatedServices(service.id);
 
   return (
     <article>

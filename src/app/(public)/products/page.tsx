@@ -4,8 +4,7 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 import { Breadcrumbs, ButtonLink, Container, EmptyState, SectionHeading, StatusPill } from "@/components/ui";
 import { AVAILABILITY_LABELS, type PRODUCT_AVAILABILITY } from "@/lib/constants";
 import { pageMeta } from "@/lib/seo";
-import { prisma } from "@/server/db";
-import { publishedCategories } from "@/server/queries";
+import { publishedCategories, searchProducts } from "@/server/queries";
 
 export const metadata = pageMeta(
   "Agricultural products",
@@ -23,26 +22,9 @@ export default async function ProductsPage({
   const category = params.category || "";
   const page = Math.max(1, Number(params.page || 1) || 1);
   const pageSize = 12;
-  const where = {
-    deletedAt: null,
-    published: true,
-    ...(category ? { category: { slug: category } } : {}),
-    ...(q
-      ? {
-          OR: [{ name: { contains: q } }, { summary: { contains: q } }],
-        }
-      : {}),
-  };
-  const [categories, total, products] = await Promise.all([
+  const [categories, { products, total }] = await Promise.all([
     publishedCategories(),
-    prisma.product.count({ where }),
-    prisma.product.findMany({
-      where,
-      include: { category: true, images: { orderBy: { sortOrder: "asc" }, take: 1 } },
-      orderBy: { name: "asc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
+    searchProducts({ q, category, page, pageSize }),
   ]);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
 

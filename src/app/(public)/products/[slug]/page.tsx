@@ -8,26 +8,20 @@ import { Breadcrumbs, Container, StatusPill } from "@/components/ui";
 import { AVAILABILITY_LABELS } from "@/lib/constants";
 import { pageMeta } from "@/lib/seo";
 import { siteUrl } from "@/lib/text";
-import { prisma } from "@/server/db";
+import { getProductBySlug, getRelatedProducts } from "@/server/queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await prisma.product.findFirst({ where: { slug, published: true, deletedAt: null } });
+  const product = await getProductBySlug(slug);
   if (!product) return {};
   return pageMeta(product.metaTitle || product.name, product.metaDescription || product.summary, `/products/${product.slug}`);
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await prisma.product.findFirst({
-    where: { slug, published: true, deletedAt: null },
-    include: { category: true, images: { orderBy: { sortOrder: "asc" } } },
-  });
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
-  const related = await prisma.product.findMany({
-    where: { published: true, deletedAt: null, categoryId: product.categoryId, NOT: { id: product.id } },
-    take: 3,
-  });
+  const related = await getRelatedProducts(product.categoryId, product.id);
   const image = product.images[0];
   const availability = AVAILABILITY_LABELS[product.availabilityStatus as keyof typeof AVAILABILITY_LABELS] || product.availabilityStatus;
 

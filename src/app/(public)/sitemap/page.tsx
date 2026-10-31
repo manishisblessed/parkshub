@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Breadcrumbs, Container, SectionHeading } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
-import { prisma } from "@/server/db";
+import { sitemapPageData } from "@/server/queries";
 
 export const metadata = pageMeta("Sitemap", "Public pages of the AGRO PARKS website.", "/sitemap");
 
@@ -26,12 +26,7 @@ const fixed = [
 ];
 
 export default async function SitemapPage() {
-  const [verticals, services, products, posts] = await Promise.all([
-    prisma.businessVertical.findMany({ where: { published: true, deletedAt: null }, orderBy: { sortOrder: "asc" } }),
-    prisma.service.findMany({ where: { published: true, deletedAt: null }, orderBy: { sortOrder: "asc" } }),
-    prisma.product.findMany({ where: { published: true, deletedAt: null }, orderBy: { name: "asc" } }),
-    prisma.blogPost.findMany({ where: { published: true, deletedAt: null }, orderBy: { title: "asc" } }),
-  ]);
+  const { verticals, services, products, posts } = await sitemapPageData();
   const groups = [
     ["Pages", fixed],
     ["Business", verticals.map((item) => [`/business/${item.slug}`, item.title])],

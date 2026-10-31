@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import { Paragraphs } from "@/components/rich-text";
 import { Breadcrumbs, Container, ScopeNote } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
-import { prisma } from "@/server/db";
+import { getLegalDocument } from "@/server/queries";
 
 export async function LegalArticle({ slug }: { slug: string }) {
-  const document = await prisma.legalDocument.findUnique({ where: { slug } });
+  const document = await getLegalDocument(slug);
   if (!document) notFound();
   return (
     <article className="py-16">

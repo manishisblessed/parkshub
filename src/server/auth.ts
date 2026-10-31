@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/server/db";
+import { prisma, hasDatabase } from "@/server/db";
 import { readSession, signSession } from "@/lib/jwt";
 import { SESSION_COOKIE, SESSION_MAX_AGE, type PermissionKey } from "@/lib/constants";
 
@@ -26,6 +26,7 @@ function cookieOptions() {
 }
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
+  if (!hasDatabase) return null;
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const userId = await readSession(token);

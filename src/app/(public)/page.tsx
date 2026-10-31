@@ -192,7 +192,7 @@ export default async function HomePage() {
 
           <ScrollReveal className="reveal-right">
             <div className="space-y-5 text-lg leading-8 text-muted">
-              {settings.introBody.split("\n\n").map((paragraph) => (
+              {settings.introBody.split("\n\n").map((paragraph: string) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
             </div>

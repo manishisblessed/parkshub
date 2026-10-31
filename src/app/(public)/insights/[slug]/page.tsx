@@ -5,18 +5,18 @@ import { Paragraphs } from "@/components/rich-text";
 import { Breadcrumbs, Container } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
 import { formatDate, siteUrl } from "@/lib/text";
-import { prisma } from "@/server/db";
+import { getBlogPostBySlug } from "@/server/queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await prisma.blogPost.findFirst({ where: { slug, published: true, deletedAt: null } });
+  const post = await getBlogPostBySlug(slug);
   if (!post) return {};
   return pageMeta(post.metaTitle, post.metaDescription, `/insights/${post.slug}`, post.coverImage || undefined);
 }
 
 export default async function InsightPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await prisma.blogPost.findFirst({ where: { slug, published: true, deletedAt: null } });
+  const post = await getBlogPostBySlug(slug);
   if (!post) notFound();
   return (
     <article className="py-12">

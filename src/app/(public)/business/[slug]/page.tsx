@@ -7,11 +7,11 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 import { BulletList, Paragraphs } from "@/components/rich-text";
 import { Breadcrumbs, ButtonLink, Container, ScopeNote, StatusPill } from "@/components/ui";
 import { pageMeta } from "@/lib/seo";
-import { prisma } from "@/server/db";
+import { getVerticalBySlug, getRelatedVerticals } from "@/server/queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const vertical = await prisma.businessVertical.findFirst({ where: { slug, published: true, deletedAt: null } });
+  const vertical = await getVerticalBySlug(slug);
   if (!vertical) return {};
   return pageMeta(
     vertical.metaTitle || vertical.title,
@@ -23,16 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function VerticalPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const vertical = await prisma.businessVertical.findFirst({
-    where: { slug, published: true, deletedAt: null },
-  });
+  const vertical = await getVerticalBySlug(slug);
   if (!vertical) notFound();
 
-  const related = await prisma.businessVertical.findMany({
-    where: { published: true, deletedAt: null, NOT: { id: vertical.id } },
-    orderBy: { sortOrder: "asc" },
-    take: 4,
-  });
+  const related = await getRelatedVerticals(vertical.id);
 
   return (
     <article>
