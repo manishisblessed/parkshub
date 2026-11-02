@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type IntrinsicTag = keyof React.JSX.IntrinsicElements;
 
@@ -57,6 +57,41 @@ export function ScrollReveal({
     <Wrapper ref={ref as React.RefObject<HTMLDivElement>} className={className}>
       {children}
     </Wrapper>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   READING PROGRESS BAR
+   Tracks scroll depth on an article page and renders a thin progress bar
+   fixed to the top of the viewport (below the sticky header).
+   ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * A fixed reading-progress bar that grows as the user scrolls down the page.
+ * Place this at the top of an article page component.
+ */
+export function ReadingProgress() {
+  const [width, setWidth] = useState("0%");
+
+  useEffect(() => {
+    const update = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+      setWidth(`${progress.toFixed(1)}%`);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  return (
+    <div
+      className="reading-progress-bar"
+      role="progressbar"
+      aria-label="Reading progress"
+      style={{ width, top: "var(--header-height, 0px)" }}
+    />
   );
 }
 

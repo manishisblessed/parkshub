@@ -85,3 +85,11 @@ export function paragraphsOf(text: string) {
     .map((part) => part.trim())
     .filter(Boolean);
 }
+
+/** Returns a human-readable reading time string, e.g. "4 min read" */
+export function readingTime(text: string | null | undefined): string {
+  if (!text) return "1 min read";
+  const words = text.trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 200));
+  return `${minutes} min read`;
+}

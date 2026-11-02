@@ -149,12 +149,7 @@ export const PUBLIC_ROLES = ["FARMER", "BUYER", "VENDOR"] as const;
 
 export const NAV_ITEMS = [
   { href: "/about", label: "About" },
-  { href: "/business", label: "Business" },
-  { href: "/products", label: "Products" },
   { href: "/services", label: "Services" },
-  { href: "/farmers", label: "Farmers" },
-  { href: "/buyers", label: "Buyers" },
-  { href: "/sustainability", label: "Sustainability" },
   { href: "/insights", label: "Insights" },
   { href: "/contact", label: "Contact" },
 ] as const;
