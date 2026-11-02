@@ -292,8 +292,8 @@ export const posts = [
     slug: "how-an-agribusiness-enquiry-should-read",
     title: "How an agribusiness enquiry should read",
     excerpt: "A useful enquiry names the crop, the window, the quantity range, and the decision that is actually being asked for.",
-    coverImage: "/images/produce.jpg",
-    coverAlt: "Illustrative photograph of fresh produce in a market.",
+    coverImage: "/images/how-an-agribusiness-enquiry.png",
+    coverAlt: "How an agribusiness enquiry should read — Agro Parks.",
     metaTitle: "How an agribusiness enquiry should read",
     metaDescription: "What AGRO PARKS needs in a product, procurement, or partnership enquiry before it can respond properly.",
     body: `## What we can answer
@@ -344,8 +344,8 @@ Applications are approved or declined inside the company. Until then you can sti
     slug: "reading-a-post-harvest-record",
     title: "Reading a post-harvest record",
     excerpt: "A batch is a quantity of produce with a source, a date, and a status. It is not a quality certificate.",
-    coverImage: "/images/warehouse.jpg",
-    coverAlt: "Illustrative photograph of a warehouse interior.",
+    coverImage: "/images/reading-post-harvest-record.png",
+    coverAlt: "Reading a post-harvest record — Agro Parks.",
     metaTitle: "How AGRO PARKS thinks about post-harvest records",
     metaDescription: "Why receiving, grading, and storage records are kept separate from public product claims.",
     body: `## Receiving is the start of the record

@@ -148,6 +148,7 @@ export const ROLE_DEFINITIONS: { key: string; name: string; description: string;
 export const PUBLIC_ROLES = ["FARMER", "BUYER", "VENDOR"] as const;
 
 export const NAV_ITEMS = [
+  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
   { href: "/insights", label: "Insights" },

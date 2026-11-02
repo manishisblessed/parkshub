@@ -13,16 +13,16 @@ export const metadata = pageMeta(
 
 /* Service images mapped by slug — falls back gracefully */
 const SERVICE_IMAGES: Record<string, string> = {
-  "land-preparation":      "/images/soil.jpg",
-  "sowing-transplanting":  "/images/seeds.jpg",
-  "irrigation-support":    "/images/irrigation.jpg",
-  "crop-monitoring":       "/images/cultivation.jpg",
-  "harvesting":            "/images/harvest.jpg",
-  "machinery-hiring":      "/images/warehouse.jpg",
-  "soil-crop-advisory":    "/images/soil-hands.jpg",
-  "precision-agriculture": "/images/greenhouse.jpg",
-  "farm-management":       "/images/hero-landscape.jpg",
-  "post-harvest-services": "/images/produce.jpg",
+  "land-preparation":      "/images/land-preparation.png",
+  "sowing-transplanting":  "/images/sowing-transplanting.png",
+  "irrigation-support":    "/images/crop-monitoring.png",
+  "crop-monitoring":       "/images/crop-monitoring.png",
+  "harvesting":            "/images/harvesting.png",
+  "machinery-hiring":      "/images/farm-machinery-hiring.png",
+  "soil-crop-advisory":    "/images/soil-crop-advisory.png",
+  "precision-agriculture": "/images/precision-agriculture.png",
+  "farm-management":       "/images/farm-management.png",
+  "post-harvest-services": "/images/post-harvest-services.png",
 };
 
 export default async function ServicesPage() {
